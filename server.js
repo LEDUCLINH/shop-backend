@@ -29,7 +29,7 @@ const port = process.env.PORT || 4000;
 
 // connect mongoose
 const url = process.env.ATLAS_URI;
-mongoose.connect(url, { useNewUrlParser: true, useCreateIndex: true });
+mongoose.connect(url, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true });
 const connection = mongoose.connection;
 connection.once('open', () => {
     console.log("Connect");
