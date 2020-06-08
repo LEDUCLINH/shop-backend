@@ -9,6 +9,7 @@ const paginate = require('jw-paginate');
  
 
 require('dotenv').config();
+const port = process.env.PORT || 8080;
 app.use(cors());
 app.use(cookieParser());
 // app.use(function(req, res, next) {
@@ -25,7 +26,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
-const port = process.env.PORT || 4000;
 
 // connect mongoose
 const url = process.env.ATLAS_URI;
