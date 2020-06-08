@@ -12,7 +12,7 @@ var timeout = require('connect-timeout')
 
 require('dotenv').config();
 const port = process.env.PORT || 8080;
-app.use(timeout('15s'))
+// app.use(timeout('15s'))
 // app.use(cors());
 app.use(cookieParser());
 app.use(function(req, res, next) {
