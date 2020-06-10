@@ -1,6 +1,9 @@
 const router = require('express').Router();
-const multer = require('multer');
-const upload = multer({dest: './public/upload/'});
+// const multer = require('multer');
+// const upload = multer({dest: './public/upload/', });
+const upload = require('../middleware/upload.middleware')
+const uploads = require('./cloudinary')
+const cloudinary = require('cloudinary')
 const User = require('../models/users.model');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
@@ -16,6 +19,11 @@ router.route('/').get(function (req, res) {
 })
 
 
+cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.CLOUD_API_KEY,
+    api_secret: process.env.CLOUD_API_SECRET
+})
 
 router.route('/register').post( upload.single('avatar'), [
     check('name', 'Invalid name! Name is leatest has 6 length').isLength({ min: 6 }),
@@ -27,20 +35,20 @@ router.route('/register').post( upload.single('avatar'), [
             return res.status(400).json(errors);
         }
         else {
-     var postUser = req.body;
-     const processedFile = req.file || {};
-    let orgName = processedFile.originalname || ''; // Tên gốc trong máy tính của người upload
-    orgName = orgName.trim().replace(/ /g, "-");
-    const fullPathInServ = processedFile.path; // Đường dẫn đầy đủ của file vừa đc upload lên server
-    // Đổi tên của file vừa upload lên, vì multer đang đặt default ko có đuôi file
-    const newFullPath = `${fullPathInServ}-${orgName}`;
-    fs.renameSync(fullPathInServ, newFullPath);
+            var postUser = req.body;
+            const processedFile = req.file || {};
+            let orgName = processedFile.originalname || ''; // Tên gốc trong máy tính của người upload
+            orgName = orgName.trim().replace(/ /g, "-");
+            const fullPathInServ = processedFile.path; // Đường dẫn đầy đủ của file vừa đc upload lên server
+            // Đổi tên của file vừa upload lên, vì multer đang đặt default ko có đuôi file
+            const newFullPath = `${fullPathInServ}-${orgName}`;
+            fs.renameSync(fullPathInServ, newFullPath);
     // res.send({
     //     status: true,
     //     message: 'file uploaded',
     //     fileNameInServer: newFullPath
     // })
-    postUser.avatar = newFullPath;
+    // postUser.avatar = newFullPath;
             let name = postUser.name;
             let email = postUser.email;
             User.findOne({ name: name, email: email }, function (err, user) {
@@ -99,22 +107,31 @@ router.route('/register').post( upload.single('avatar'), [
                                     console.log('Email sent '+ info.response);
                                 }
                             })
-                            var newUser = new User(postUser);
-                            bcrypt.genSalt(saltRounds, function (err, salt) {
-                                bcrypt.hash(newUser.password, salt, function (err, hash) {
-                                    newUser.password = hash;
-                                    // Store hash in your password DB.   
-                                    newUser.save(function (err, user) {
-                                        if (err) {
-                                            console.log(err)
-                                        }
-                                        else {
-                                            res.status(200).json({ notification:"Welcom to shop",
-                                            fileNameInServer: newFullPath
-                                        })
-                                        }
+                            cloudinary.uploader.upload(newFullPath, (result, err) => {
+                                if (err)  res.status(400).json(err)
+                                postUser.avatar = result.secure_url
+                                // res.status(200).json({
+                                //     success: true,
+                                //     notification:"Welcom to shop",
+                                //     fileNameInServer: result.secure_url,
+                                // })
+                                var newUser = new User(postUser);
+                                bcrypt.genSalt(saltRounds, function (err, salt) {
+                                    bcrypt.hash(newUser.password, salt, function (err, hash) {
+                                        newUser.password = hash;
+                                        // Store hash in your password DB.   
+                                        newUser.save(function (err, user) {
+                                            if (err) {
+                                                console.log(err)
+                                            }
+                                            else {
+                                                res.status(200).json({ notification:"Welcom to shop",
+                                                fileNameInServer: user.avatar
+                                            })
+                                            }
+                                        });
                                     });
-                                });
+                                })
                             })
                         }
                     })
