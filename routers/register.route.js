@@ -2,7 +2,6 @@ const router = require('express').Router();
 // const multer = require('multer');
 // const upload = multer({dest: './public/upload/', });
 const upload = require('../middleware/upload.middleware')
-const uploads = require('./cloudinary')
 const cloudinary = require('cloudinary')
 const User = require('../models/users.model');
 const nodemailer = require('nodemailer');
